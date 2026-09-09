@@ -38,15 +38,19 @@ React is an optional peer dependency, needed only for `posekit/react`.
 
 ## The pipeline
 
-Four pure steps, each exported, so you can stop wherever you need to:
+Each step is exported, so you can stop wherever you need to:
 
+```ts
+const resolved = applyRigParams(pattern, params);      // variant, range, load
+const pose     = poseAt(resolved, elapsedMs);          // joint targets at a moment
+const geometry = figureGeometry(pose, resolved);       // drawable primitives
+const svg      = toSVG(pose, resolved);                // a complete <svg>
 ```
-applyRigParams(pattern, params)  →  ResolvedPattern   variant, range, load
-poseAt(resolved, elapsedMs)      →  RigPose           joint targets at a moment
-buildSkeleton(pose)              →  Skeleton          IK-solved limbs
-figureGeometry(skeleton)         →  FigureGeometry    drawable primitives
-toSVG(pose, resolved)            →  string            a complete <svg>
-```
+
+`figureGeometry` runs the IK solver for you. If you want the solved limbs
+themselves — to drive a canvas, a native renderer, or your own markup — call
+`buildSkeleton(pose, resolved.footDir, resolved.view, resolved.toe)` and read
+the joint coordinates off the result.
 
 Nothing in the core touches the DOM. It runs in Node, a worker, or a browser.
 

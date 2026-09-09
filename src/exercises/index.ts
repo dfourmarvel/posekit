@@ -6,7 +6,7 @@ import raw from './exercises.json';
  *
  * This export is optional and deliberately separate: the geometry core has no
  * opinion about what an exercise is, and a caller with their own catalogue
- * should map their own rows onto `rig` + `rigParams` rather than adopt this
+ * should map their own rows onto `rig` + `rig_params` rather than adopt this
  * shape. It is here because a pattern registry with no mapping is hard to use
  * on day one.
  *
@@ -36,7 +36,25 @@ export type Exercise = {
   rig_params?: RigParams;
 };
 
-export const EXERCISES: readonly Exercise[] = raw as unknown as readonly Exercise[];
+/** The controlled vocabularies the catalogue's fields draw from. */
+export type Vocabulary = Record<string, readonly string[]>;
+
+type Dataset = {
+  version: string | number;
+  provenance: string;
+  vocab: Vocabulary;
+  exercises: Exercise[];
+};
+
+// The JSON is an object with the array under `exercises`, not a bare array.
+// Reading it as one is a mistake a type assertion will happily hide, so the
+// shape is asserted once, here, and the suite checks it at runtime.
+const dataset = raw as unknown as Dataset;
+
+export const EXERCISES: readonly Exercise[] = dataset.exercises;
+
+/** Allowed values per field, e.g. `VOCAB.equipment`. */
+export const VOCAB: Vocabulary = dataset.vocab;
 
 const BY_SLUG = new Map(EXERCISES.map((e) => [e.slug, e]));
 

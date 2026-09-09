@@ -12,7 +12,7 @@ import {
 import { applyRigParams } from '../params';
 import { getPattern } from '../patterns';
 import { poseAt } from '../pose';
-import { DEFAULT_PROPORTIONS, GROUND_Y, buildSkeleton } from '../solve';
+import { DEFAULT_PROPORTIONS, GROUND_Y } from '../solve';
 import {
   BONE_FILL,
   EYE_R,

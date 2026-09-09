@@ -1,14 +1,16 @@
 /**
  * posekit — procedural 2D figure animation.
  *
- * The pipeline is four pure steps, and every one of them is exported so you can
- * stop at whichever stage you need:
+ * The pipeline is pure at every step, and each step is exported so you can stop
+ * at whichever stage you need:
  *
- *   applyRigParams(pattern, params)  →  ResolvedPattern   (variant + range + load)
- *   poseAt(resolved, elapsedMs)      →  RigPose           (joint targets at a moment)
- *   buildSkeleton(pose)              →  Skeleton          (IK-solved limbs)
- *   figureGeometry(skeleton)         →  FigureGeometry    (drawable primitives)
- *   toSVG(geometry)                  →  string            (a complete <svg> document)
+ *   const resolved = applyRigParams(pattern, params);  // variant + range + load
+ *   const pose     = poseAt(resolved, elapsedMs);      // joint targets at a moment
+ *   const geometry = figureGeometry(pose, resolved);   // drawable primitives
+ *   const svg      = toSVG(pose, resolved);            // a complete <svg> document
+ *
+ * `figureGeometry` runs the IK solver itself. For the solved limbs directly,
+ * call `buildSkeleton(pose, resolved.footDir, resolved.view, resolved.toe)`.
  *
  * Nothing here touches the DOM, so it runs in Node, a worker, or a browser.
  * The React binding lives in `posekit/react` and is entirely optional.
