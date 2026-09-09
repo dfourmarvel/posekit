@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>posekit — exercise animation you can change at runtime</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --ground:#f4f4f0; --surface:#fff; --ink:#1b211c; --muted:#5d6a5f;
+    --line:#dfe3dc; --accent:#2f5d3f;
+    --color-figure-outline:#2f4a2a; --color-figure-head:#f2eed8;
+    --color-figure-arm:#b9cf86; --color-figure-torso:#8aa578;
+    --color-figure-leg:#3f5c37; --color-figure-load:#e08a2e;
+    --color-figure-ground:#e2e8d8; --color-figure-prop:#dfe6e1;
+    --color-figure-weight:#2b322e;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --ground:#12160f; --surface:#181d16; --ink:#e9ede6; --muted:#97a394;
+      --line:#28301f; --accent:#8fce9f;
+      --color-figure-ground:#2a3326; --color-figure-prop:#33402f;
+      --color-figure-head:#f0ecd6;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);
+    font-family:Chivo,system-ui,sans-serif;line-height:1.55}
+  .wrap{max-width:960px;margin:0 auto;padding:0 24px}
+  header{padding:56px 0 28px}
+  h1{font-size:clamp(2rem,5vw,3rem);font-weight:900;letter-spacing:-.03em;margin:0 0 .3em;line-height:1.05}
+  .lede{font-size:1.1rem;color:var(--muted);max-width:56ch;margin:0}
+  code,.mono{font-family:"IBM Plex Mono",monospace}
+  .stage{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+    padding:24px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;align-items:center}
+  @media(max-width:720px){.stage{grid-template-columns:1fr}}
+  #figure{display:flex;align-items:center;justify-content:center;min-height:360px}
+  /* Bound by height, not width: the cropped view box is much taller than it is
+     wide for a standing pattern, so sizing on width makes the figure enormous. */
+  #figure svg{height:360px;max-height:52vh;width:auto;max-width:100%}
+  .controls label{display:block;font-size:.78rem;font-weight:700;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+  .row{margin-bottom:20px}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  select,button{font:inherit;font-size:.95rem;padding:8px 10px;border-radius:6px;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);width:100%}
+  button{cursor:pointer;font-weight:700}
+  .readout{font-family:"IBM Plex Mono",monospace;font-size:1.5rem;font-weight:500}
+  .readout small{font-size:.7em;color:var(--muted)}
+  .hint{font-size:.86rem;color:var(--muted);margin:8px 0 0}
+  .snippet{margin-top:26px;background:var(--surface);border:1px solid var(--line);
+    border-radius:10px;padding:16px 18px;overflow-x:auto}
+  .snippet pre{margin:0;font-family:"IBM Plex Mono",monospace;font-size:.86rem;color:var(--ink)}
+  .snippet .k{color:var(--accent);font-weight:500}
+  section{padding:40px 0}
+  h2{font-size:1.4rem;font-weight:900;letter-spacing:-.02em;margin:0 0 .5em}
+  p{margin:0 0 1em;color:var(--muted);max-width:62ch}
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:14px}
+  .cell{background:var(--surface);border:1px solid var(--line);border-radius:8px;
+    padding:8px;text-align:center}
+  .cell svg{width:100%;height:104px}
+  .cell span{display:block;font-size:.72rem;color:var(--muted);margin-top:4px;
+    font-family:"IBM Plex Mono",monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  footer{padding:30px 0 60px;color:var(--muted);font-size:.9rem;border-top:1px solid var(--line)}
+  a{color:var(--accent)}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="wrap">
+  <h1>Exercise animation you can<br>change at runtime.</h1>
+  <p class="lede">Every other exercise library ships frames an artist drew. posekit solves the pose from joint angles, so range of motion is a number you pass in. Drag the slider.</p>
+</header>
+
+<main class="wrap">
+  <div class="stage">
+    <div id="figure" aria-live="off"></div>
+    <div class="controls">
+      <div class="row">
+        <label for="range">Range of motion</label>
+        <input type="range" id="range" min="0" max="1.2" step="0.01" value="1">
+        <p class="readout"><span id="rangeVal">1.00</span><small> × authored depth</small></p>
+        <p class="hint" id="rangeHint">Full range, as the pattern was authored.</p>
+      </div>
+      <div class="row">
+        <label for="pattern">Movement</label>
+        <select id="pattern"></select>
+      </div>
+      <div class="row">
+        <label for="tempo">Tempo</label>
+        <input type="range" id="tempo" min="0.4" max="2" step="0.05" value="1">
+      </div>
+      <button id="playPause" type="button">Pause</button>
+    </div>
+  </div>
+
+  <div class="snippet">
+    <pre><span class="k">const</span> squat = applyRigParams(getPattern(<span class="k">'<span id="snipPattern">squat</span>'</span>), { range: <span class="k"><span id="snipRange">1</span></span> });
+<span class="k">const</span> svg = toSVG(poseAt(squat, elapsed), squat);</pre>
+  </div>
+
+  <section>
+    <h2>Why this is not a nicer sprite sheet</h2>
+    <p>A physiotherapist prescribing a squat after a knee injury does not want a squat — they want a squat to sixty percent, and next week to seventy. A pre-rendered library cannot express that at any file size. This one is a number.</p>
+    <p>The whole core is about <strong>22&nbsp;KB gzipped</strong>, against 14&nbsp;MB for a comparable dotLottie set. That gap decides whether an exercise library loads at all on a slow connection.</p>
+  </section>
+
+  <section>
+    <h2>Every bundled pattern</h2>
+    <p id="galleryNote">37 movement patterns, covering 178 catalogued exercises. All rendered from the same solver, live on this page.</p>
+    <div class="gallery" id="gallery"></div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p style="margin:0">MIT licensed, no third-party assets. <a href="https://github.com/dfourmarvel/posekit">Source on GitHub</a>.</p>
+</footer>
+
+<script type="module">
+import { PATTERNS, getPattern, applyRigParams, poseAt, toSVG } from '../dist/index.js';
+
+const $ = (id) => document.getElementById(id);
+const figure = $('figure');
+const rangeInput = $('range');
+const tempoInput = $('tempo');
+const patternSelect = $('pattern');
+const playPause = $('playPause');
+
+const ids = Object.keys(PATTERNS).sort();
+for (const id of ids) {
+  const opt = document.createElement('option');
+  opt.value = id;
+  opt.textContent = id.replace(/_/g, ' ');
+  patternSelect.appendChild(opt);
+}
+patternSelect.value = ids.includes('squat') ? 'squat' : ids[0];
+
+const HINTS = [
+  [0.001, 'Zero range — the figure never leaves its start position.'],
+  [0.35, 'A very short range. Useful for a restricted joint, or a pulse.'],
+  [0.7, 'Partial range, the way a rehab prescription is usually written.'],
+  [1.05, 'Full range, as the pattern was authored.'],
+  [Infinity, 'Beyond the authored range — the solver clamps at reach limits.'],
+];
+
+let resolved = null;
+let playing = true;
+let elapsed = 0;
+let last = 0;
+
+function rebuild() {
+  const range = Number(rangeInput.value);
+  const base = getPattern(patternSelect.value);
+  resolved = applyRigParams(base, { range });
+  $('rangeVal').textContent = range.toFixed(2);
+  $('snipRange').textContent = range.toFixed(2);
+  $('snipPattern').textContent = patternSelect.value;
+  $('rangeHint').textContent = HINTS.find(([max]) => range < max)[1];
+}
+
+function frame(ts) {
+  if (!last) last = ts;
+  const dt = ts - last;
+  last = ts;
+  if (playing) elapsed += dt * Number(tempoInput.value);
+  figure.innerHTML = toSVG(poseAt(resolved, elapsed), resolved, {
+    title: patternSelect.value.replace(/_/g, ' '),
+  });
+  requestAnimationFrame(frame);
+}
+
+rangeInput.addEventListener('input', rebuild);
+patternSelect.addEventListener('change', () => { elapsed = 0; rebuild(); });
+playPause.addEventListener('click', () => {
+  playing = !playing;
+  playPause.textContent = playing ? 'Pause' : 'Play';
+});
+
+rebuild();
+requestAnimationFrame(frame);
+
+// The gallery is static first frames, not 37 animation loops — one page should
+// not run one requestAnimationFrame per pattern.
+const gallery = $('gallery');
+for (const id of ids) {
+  const r = applyRigParams(getPattern(id), {});
+  const cell = document.createElement('div');
+  cell.className = 'cell';
+  cell.innerHTML =
+    toSVG(poseAt(r, r.cycleMs * 0.5), r, { hideLoad: true, title: id.replace(/_/g, ' ') }) +
+    `<span>${id.replace(/_/g, ' ')}</span>`;
+  gallery.appendChild(cell);
+}
+$('galleryNote').textContent =
+  `${ids.length} movement patterns, covering 178 catalogued exercises. All rendered from the same solver, live on this page.`;
+</script>
+</body>
+</html>

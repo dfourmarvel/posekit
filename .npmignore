@@ -1,0 +1,4 @@
+demo/
+src/
+.github/
+*.test.ts

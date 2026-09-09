@@ -1,0 +1,9 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+demo/dist/
+.env
+.env.*
+!.env.example
+posekit-*.tgz
