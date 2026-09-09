@@ -45,7 +45,8 @@
   .row{margin-bottom:20px}
   input[type=range]{width:100%;accent-color:var(--accent)}
   select,button{font:inherit;font-size:.95rem;padding:8px 10px;border-radius:6px;
-    border:1px solid var(--line);background:var(--surface);color:var(--ink);width:100%}
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);width:100%;
+    min-height:44px}
   button{cursor:pointer;font-weight:700}
   .readout{font-family:"IBM Plex Mono",monospace;font-size:1.5rem;font-weight:500}
   .readout small{font-size:.7em;color:var(--muted)}
@@ -150,6 +151,12 @@ let playing = true;
 let elapsed = 0;
 let last = 0;
 
+function draw() {
+  figure.innerHTML = toSVG(poseAt(resolved, elapsed), resolved, {
+    title: patternSelect.value.replace(/_/g, ' '),
+  });
+}
+
 function rebuild() {
   const range = Number(rangeInput.value);
   const base = getPattern(patternSelect.value);
@@ -158,16 +165,21 @@ function rebuild() {
   $('snipRange').textContent = range.toFixed(2);
   $('snipPattern').textContent = patternSelect.value;
   $('rangeHint').textContent = HINTS.find(([max]) => range < max)[1];
+  // Paint immediately rather than waiting for the next animation frame. A
+  // backgrounded tab, a reduced-motion setting, or a paused figure would
+  // otherwise leave the hero blank, which is the one thing this page has to
+  // show. It also means dragging the slider updates even while paused.
+  draw();
 }
 
 function frame(ts) {
   if (!last) last = ts;
   const dt = ts - last;
   last = ts;
-  if (playing) elapsed += dt * Number(tempoInput.value);
-  figure.innerHTML = toSVG(poseAt(resolved, elapsed), resolved, {
-    title: patternSelect.value.replace(/_/g, ' '),
-  });
+  if (playing) {
+    elapsed += dt * Number(tempoInput.value);
+    draw();
+  }
   requestAnimationFrame(frame);
 }
 
