@@ -7,3 +7,4 @@ demo/dist/
 .env.*
 !.env.example
 posekit-*.tgz
+.claude/
