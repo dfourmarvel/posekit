@@ -1,0 +1,64 @@
+name: Deploy demo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Only one deploy at a time; a queued run supersedes an older one rather than
+# racing it.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # The demo imports the built package, so a broken build must fail the
+      # deploy rather than publish a page that throws on load.
+      - run: npm run build
+
+      - name: Assemble the site
+        run: |
+          mkdir -p _site/demo
+          cp demo/index.html _site/demo/index.html
+          cp -r dist _site/dist
+          # The demo imports '../dist/index.js', so it has to stay one level
+          # down with dist as its sibling. The root is a redirect rather than a
+          # copy, so there is only ever one page to keep correct.
+          cat > _site/index.html <<'HTML'
+          <!doctype html>
+          <meta charset="utf-8">
+          <title>posekit</title>
+          <meta http-equiv="refresh" content="0; url=./demo/">
+          <link rel="canonical" href="./demo/">
+          <p>Redirecting to <a href="./demo/">the posekit demo</a>.</p>
+          HTML
+          # Jekyll would otherwise ignore any path starting with an underscore.
+          touch _site/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
