@@ -59,3 +59,34 @@ describe('the README does not overstate the numbers', () => {
     expect(readme).not.toMatch(/the only exercise animation library/i);
   });
 });
+
+describe('the licence is stated consistently everywhere', () => {
+  // Three files have to agree, and a mismatch between the LICENSE file and the
+  // package manifest is the kind of thing nobody notices until a lawyer does.
+  const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
+  const licence = readFileSync(new URL('../LICENSE', import.meta.url), 'utf8');
+  const pkg = JSON.parse(
+    readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
+  ) as { license: string; files: string[] };
+
+  it('ships the AGPL text, not some other licence', () => {
+    expect(licence).toContain('GNU AFFERO GENERAL PUBLIC LICENSE');
+    expect(licence).toContain('Version 3, 19 November 2007');
+  });
+
+  it('declares the matching SPDX identifier in the manifest', () => {
+    expect(pkg.license).toBe('AGPL-3.0-or-later');
+  });
+
+  it('says AGPL in the README and no longer claims MIT as the current licence', () => {
+    expect(readme).toMatch(/AGPL-3\.0-or-later/);
+    // MIT may only be mentioned as history, never as the terms that apply now.
+    const mitMentions = readme.match(/MIT/g) ?? [];
+    expect(mitMentions.length).toBeLessThanOrEqual(1);
+  });
+
+  it('ships the commercial-licence offer to npm consumers', () => {
+    expect(pkg.files).toContain('COMMERCIAL-LICENCE.md');
+    expect(pkg.files).toContain('LICENSE');
+  });
+});

@@ -12,7 +12,7 @@
     "rehabilitation",
     "range-of-motion"
   ],
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "author": "Daniel Deladzikunu",
   "repository": {
     "type": "git",
@@ -27,7 +27,8 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "COMMERCIAL-LICENCE.md"
   ],
   "exports": {
     ".": {

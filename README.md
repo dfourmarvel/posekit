@@ -24,7 +24,8 @@ posekit trades coverage for control:
 | Change tempo, load, grip | no | yes |
 | Payload | 14–90 MB | **~22 KB gzipped** |
 | Adding an exercise | commission an artist | write keyframes |
-| Asset licence | varies; often share-alike or paid | MIT, no third-party assets |
+| Third-party asset licences | varies; often share-alike or paid | none — there are no third-party assets |
+| Project licence | perpetual fee, per product | AGPL, or a commercial exception |
 
 The size difference is not a micro-optimisation. It is the difference between an exercise library that works on a slow connection and one that does not.
 
@@ -120,4 +121,24 @@ npm test
 
 ## Licence
 
-MIT. No third-party exercise dataset, imagery or motion capture was used — every pattern and all 178 exercise entries are original work, so nothing here carries an attribution or share-alike obligation.
+**GNU AGPL-3.0-or-later**, with a commercial exception available.
+
+Plain English:
+
+- **Use it yourself** — in a clinic, a gym, a classroom, a research project, any internal tool — free, no obligation.
+- **Build something open** on it — free, provided your project is AGPL too.
+- **Ship a closed-source product** on it — you need a [commercial licence](COMMERCIAL-LICENCE.md). Email <danieldeladzikunu@gmail.com>.
+
+The AGPL asks one thing back: improvements to the rig return to everyone who uses it. That is the whole point of publishing it.
+
+Be aware this is stronger than a typical open-source licence — AGPL reaches through imports, so an application bundling posekit must itself be AGPL or hold a commercial exception. If that does not suit you, say so and ask; non-profits, students and clinics in resource-constrained settings are not treated the same as a funded company.
+
+No third-party exercise dataset, imagery or motion capture was used — every pattern and all 178 exercise entries are original work, so the only obligations here are posekit's own.
+
+*Commits up to `74aeaac` were published under MIT; that grant stands for anyone who took a copy under it.*
+
+## Contributing
+
+Improvements to the movement patterns are the most useful thing you can send. A pattern is data — keyframes and named poses — so adding one needs no engine changes; see `src/patterns/` for 36 worked examples. 25 of the 61 specified patterns are still unauthored.
+
+Every pattern must pass the form invariants in `src/form.test.ts`: bones stay rigid, knees do not invert, straight-body movements stay collinear. Run `npm test` before opening a pull request. Contributions are accepted under the AGPL.
